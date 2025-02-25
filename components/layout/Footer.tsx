@@ -6,7 +6,7 @@ export function Footer(): JSX.Element {
       <div class="container mx-auto px-4 py-12">
         <div class="grid grid-cols-1 md:grid-cols-4 gap-8">
           <div class="col-span-1 md:col-span-2">
-            <img src="/logo.svg" alt="AT Vault Logo" class="h-8 w-auto mb-4" />
+            <img src="/assets/images/atvault-logo-blanco.png" alt="AT Vault Logo White version" class="h-8 w-auto mb-4" />
             <p class="text-gray-400 mb-4">
               Soluciones empresariales innovadoras para impulsar tu negocio al siguiente nivel.
             </p>

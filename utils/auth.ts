@@ -1,23 +1,39 @@
-import { create, verify } from "https://deno.land/x/djwt@v2.9.1/mod.ts";
+import { create, verify, getNumericDate } from "https://deno.land/x/djwt@v2.9.1/mod.ts";
 import { connectDB } from "./db.ts";
 import { IUser, USERS_COLLECTION, validatePassword } from "../models/User.ts";
 import { ObjectId } from "mongodb";
 
 const JWT_SECRET = Deno.env.get("JWT_SECRET") || "atvault_jwt_secret_key_2024";
-const KEY = new TextEncoder().encode(JWT_SECRET);
+
+// Crear una clave criptográfica para firmar los tokens
+const cryptoKey = await crypto.subtle.importKey(
+  "raw",
+  new TextEncoder().encode(JWT_SECRET),
+  { name: "HMAC", hash: "SHA-256" },
+  false,
+  ["sign", "verify"]
+);
 
 export async function createAuthToken(userId: string): Promise<string> {
+  const payload = {
+    iss: "atvault",
+    sub: userId,
+    exp: getNumericDate(60 * 60 * 24), // 24 horas
+    iat: getNumericDate(0)
+  };
+
   return await create(
     { alg: "HS256", typ: "JWT" },
-    { userId, exp: Date.now() / 1000 + 60 * 60 * 24 }, // 24 horas
-    KEY
+    payload,
+    cryptoKey
   );
 }
 
 export async function verifyAuthToken(token: string) {
   try {
-    return await verify(token, KEY);
-  } catch {
+    return await verify(token, cryptoKey);
+  } catch (error) {
+    console.error("Error verificando token:", error);
     return null;
   }
 }
@@ -31,11 +47,11 @@ export async function getUserFromRequest(req: Request): Promise<IUser | null> {
     if (!token) return null;
 
     const payload = await verifyAuthToken(token);
-    if (!payload) return null;
+    if (!payload || !payload.sub) return null;
 
     const db = await connectDB();
     const user = await db.collection<IUser>(USERS_COLLECTION).findOne({
-      _id: new ObjectId(payload.userId),
+      _id: new ObjectId(payload.sub),
     });
 
     return user;

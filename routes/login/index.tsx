@@ -15,25 +15,45 @@ export const handler: Handlers<LoginData> = {
       const email = form.get("email")?.toString();
       const password = form.get("password")?.toString();
 
+      console.log("📧 Intento de login con email:", email);
+
       if (!email || !password) {
+        console.log("❌ Email o contraseña faltantes");
         return ctx.render({ error: "Por favor ingresa tu email y contraseña" });
       }
 
       const user = await authenticateUser(email, password);
-      if (!user) {
+      console.log("👤 Usuario encontrado:", user ? {
+        _id: user._id?.toString(),
+        email: user.email,
+        name: user.name,
+        role: user.role
+      } : null);
+
+      if (!user || !user._id) {
+        console.log("❌ Usuario no encontrado o credenciales inválidas");
         return ctx.render({ error: "Email o contraseña incorrectos" });
       }
 
-      const token = await createAuthToken(user._id!.toString());
-      const response = new Response("", {
-        status: 303,
-        headers: { Location: "/blog" },
-      });
+      try {
+        console.log("🔑 Creando token para usuario:", user._id.toString());
+        const token = await createAuthToken(user._id.toString());
+        console.log("✅ Token creado exitosamente");
+        
+        const response = new Response("", {
+          status: 303,
+          headers: { Location: "/blog" },
+        });
 
-      setAuthCookie(response, token);
-      return response;
+        setAuthCookie(response, token);
+        console.log("🍪 Cookie establecida, redirigiendo a /blog");
+        return response;
+      } catch (tokenError) {
+        console.error("❌ Error creando token:", tokenError);
+        return ctx.render({ error: "Error al iniciar sesión. Por favor intenta nuevamente." });
+      }
     } catch (error) {
-      console.error("Error en login:", error);
+      console.error("❌ Error en login:", error);
       return ctx.render({ error: "Error al iniciar sesión" });
     }
   },

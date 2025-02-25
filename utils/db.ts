@@ -6,12 +6,24 @@ const MONGODB_URI = Deno.env.get("MONGODB_URI") || "mongodb://localhost:27017";
 const MONGODB_DB = Deno.env.get("MONGODB_DB") || "webatvault";
 
 let db: Database | null = null;
+let client: MongoClient | null = null;
 
 export async function connectDB(): Promise<Database> {
   if (db) return db;
 
   try {
-    const client = new MongoClient(MONGODB_URI);
+    client = new MongoClient(MONGODB_URI, {
+      retryWrites: true,
+      w: "majority",
+      connectTimeoutMS: 30000,
+      socketTimeoutMS: 45000,
+      serverSelectionTimeoutMS: 60000,
+      maxPoolSize: 50,
+      minPoolSize: 10,
+      tls: true,
+      tlsAllowInvalidCertificates: false,
+    });
+
     await client.connect();
     console.log("🚀 Conectado a MongoDB");
     
@@ -19,16 +31,26 @@ export async function connectDB(): Promise<Database> {
     return db;
   } catch (error) {
     console.error("❌ Error conectando a MongoDB:", error);
+    // Intentar limpiar la conexión en caso de error
+    if (client) {
+      try {
+        await client.close();
+      } catch (closeError) {
+        console.error("Error al cerrar la conexión:", closeError);
+      }
+    }
+    client = null;
+    db = null;
     throw error;
   }
 }
 
 export async function disconnectDB(): Promise<void> {
-  if (!db) return;
+  if (!client) return;
 
   try {
-    const client = (db as any).client;
     await client.close();
+    client = null;
     db = null;
     console.log("👋 Desconectado de MongoDB");
   } catch (error) {

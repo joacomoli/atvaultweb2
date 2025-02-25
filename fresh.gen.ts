@@ -10,6 +10,7 @@ import * as $admin_blog_index from "./routes/admin/blog/index.tsx";
 import * as $api_admin_blog_posts_slug_ from "./routes/api/admin/blog/posts/[slug].ts";
 import * as $api_admin_blog_posts_index from "./routes/api/admin/blog/posts/index.ts";
 import * as $api_joke from "./routes/api/joke.ts";
+import * as $api_upload from "./routes/api/upload.ts";
 import * as $blog_slug_ from "./routes/blog/[slug].tsx";
 import * as $blog_index from "./routes/blog/index.tsx";
 import * as $greet_name_ from "./routes/greet/[name].tsx";
@@ -18,8 +19,10 @@ import * as $login_index from "./routes/login/index.tsx";
 import * as $logout from "./routes/logout.ts";
 import * as $profile_index from "./routes/profile/index.tsx";
 import * as $register_index from "./routes/register/index.tsx";
+import * as $BlogForm from "./islands/BlogForm.tsx";
 import * as $ClientsCarousel from "./islands/ClientsCarousel.tsx";
 import * as $Counter from "./islands/Counter.tsx";
+import * as $RichTextEditor from "./islands/RichTextEditor.tsx";
 import { type Manifest } from "$fresh/server.ts";
 
 const manifest = {
@@ -32,6 +35,7 @@ const manifest = {
     "./routes/api/admin/blog/posts/[slug].ts": $api_admin_blog_posts_slug_,
     "./routes/api/admin/blog/posts/index.ts": $api_admin_blog_posts_index,
     "./routes/api/joke.ts": $api_joke,
+    "./routes/api/upload.ts": $api_upload,
     "./routes/blog/[slug].tsx": $blog_slug_,
     "./routes/blog/index.tsx": $blog_index,
     "./routes/greet/[name].tsx": $greet_name_,
@@ -42,8 +46,10 @@ const manifest = {
     "./routes/register/index.tsx": $register_index,
   },
   islands: {
+    "./islands/BlogForm.tsx": $BlogForm,
     "./islands/ClientsCarousel.tsx": $ClientsCarousel,
     "./islands/Counter.tsx": $Counter,
+    "./islands/RichTextEditor.tsx": $RichTextEditor,
   },
   baseUrl: import.meta.url,
 } satisfies Manifest;

@@ -3,6 +3,7 @@ import { Head } from "$fresh/runtime.ts";
 import { connectDB } from "../../../utils/db.ts";
 import { IPost, POSTS_COLLECTION, createPost } from "../../../models/Post.ts";
 import { getUserFromRequest } from "../../../utils/auth.ts";
+import BlogForm from "../../../islands/BlogForm.tsx";
 
 interface Data {
   error?: string;
@@ -33,15 +34,11 @@ export const handler: Handlers<Data> = {
       }
 
       const form = await req.formData();
-      const title = form.get("title")?.toString();
-      const content = form.get("content")?.toString();
-      const excerpt = form.get("excerpt")?.toString();
+      const title = form.get("title")?.toString() || "Sin título";
+      const content = form.get("content")?.toString() || "";
+      const excerpt = form.get("excerpt")?.toString() || "";
       const coverImage = form.get("coverImage")?.toString();
       const status = form.get("status")?.toString() as 'draft' | 'published' || 'published';
-
-      if (!title || !content || !excerpt) {
-        return ctx.render({ error: "Todos los campos son obligatorios" });
-      }
 
       const db = await connectDB();
       
@@ -81,6 +78,22 @@ export default function CreatePost({ data }: PageProps<Data>) {
     <>
       <Head>
         <title>Crear Post - AT Vault Blog</title>
+        <style>{`
+          .content-editor {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
+            font-size: 16px;
+            line-height: 1.6;
+            min-height: 400px;
+            padding: 1rem;
+            white-space: pre-wrap;
+          }
+          .image-preview {
+            max-width: 200px;
+            max-height: 200px;
+            object-fit: cover;
+            border-radius: 0.5rem;
+          }
+        `}</style>
       </Head>
       <div class="max-w-4xl mx-auto px-4 py-12">
         <h1 class="text-3xl font-bold mb-8">Crear Nuevo Post</h1>
@@ -91,75 +104,7 @@ export default function CreatePost({ data }: PageProps<Data>) {
           </div>
         )}
 
-        <form method="POST" class="space-y-6">
-          <div>
-            <label class="block text-sm font-medium text-gray-700 mb-2">
-              Título
-            </label>
-            <input
-              type="text"
-              name="title"
-              required
-              class="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-primary-500"
-            />
-          </div>
-
-          <div>
-            <label class="block text-sm font-medium text-gray-700 mb-2">
-              Extracto
-            </label>
-            <textarea
-              name="excerpt"
-              required
-              rows={3}
-              class="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-primary-500"
-            ></textarea>
-          </div>
-
-          <div>
-            <label class="block text-sm font-medium text-gray-700 mb-2">
-              Contenido
-            </label>
-            <textarea
-              name="content"
-              required
-              rows={10}
-              class="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-primary-500"
-            ></textarea>
-          </div>
-
-          <div>
-            <label class="block text-sm font-medium text-gray-700 mb-2">
-              URL de la imagen de portada
-            </label>
-            <input
-              type="url"
-              name="coverImage"
-              class="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-primary-500"
-              placeholder="/assets/images/default-post.jpg"
-            />
-          </div>
-
-          <div>
-            <label class="block text-sm font-medium text-gray-700 mb-2">
-              Estado
-            </label>
-            <select
-              name="status"
-              class="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-primary-500"
-            >
-              <option value="published">Publicado</option>
-              <option value="draft">Borrador</option>
-            </select>
-          </div>
-
-          <button
-            type="submit"
-            class="w-full bg-primary-600 text-white py-3 px-6 rounded-lg hover:bg-primary-700 transition-colors"
-          >
-            Publicar Post
-          </button>
-        </form>
+        <BlogForm error={data?.error} />
       </div>
     </>
   );

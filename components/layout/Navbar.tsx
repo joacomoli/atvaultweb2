@@ -7,8 +7,8 @@ export function Navbar(): JSX.Element {
       <div class="container mx-auto px-4">
         <div class="flex justify-between items-center h-16">
           <a href="/" class="flex items-center space-x-3">
-            <img src="/logo.svg" alt="AT Vault Logo" class="h-8 w-auto" />
-            <span class="font-bold text-xl text-gray-900">AT Vault</span>
+            <img src="/assets/images/at-vault-logo.png" alt="AT Vault Logo" class="h-12 w-auto" />
+            
           </a>
 
           <div class="hidden md:flex items-center space-x-8">
