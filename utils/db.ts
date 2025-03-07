@@ -1,5 +1,5 @@
-import { MongoClient, Database } from "mongodb";
-import "https://deno.land/std@0.216.0/dotenv/load.ts";
+import { MongoClient, Database } from "npm:mongodb@6.3.0";
+import "$std/dotenv/load.ts";
 import { IPost } from "../models/Post.ts";
 
 const MONGODB_URI = Deno.env.get("MONGODB_URI") || "mongodb://localhost:27017";

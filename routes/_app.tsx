@@ -9,11 +9,20 @@ export default function App({ Component }: PageProps) {
         <meta name="viewport" content="width=device-width, initial-scale=1.0" />
         <title>AT Vault - Tecnología Amiga</title>
         <meta name="description" content="AT Vault es tu socio tecnológico de confianza, ofreciendo soluciones innovadoras en Salesforce y automatización." />
-        <link rel="stylesheet" href="/styles.css" />
         <link rel="icon" href="/favicon.ico" />
-        <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
+        <link rel="stylesheet" href="/styles.css" />
+        {/* Google Analytics 4 */}
+        <script async src="https://www.googletagmanager.com/gtag/js?id=G-5RQMWQ6X0D"></script>
+        <script dangerouslySetInnerHTML={{
+          __html: `
+            window.dataLayer = window.dataLayer || [];
+            function gtag(){dataLayer.push(arguments);}
+            gtag('js', new Date());
+            gtag('config', 'G-5RQMWQ6X0D');
+          `
+        }} />
       </Head>
-      <body class="min-h-screen bg-white">
+      <body class="min-h-screen bg-gray-100 text-gray-900 font-sans">
         <Component />
       </body>
     </html>

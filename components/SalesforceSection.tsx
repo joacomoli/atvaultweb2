@@ -95,49 +95,61 @@ export function SalesforceSection() {
   }, [scrollContainer.value]);
 
   return (
-    <section class="relative min-h-[100vh] flex items-center bg-gradient-to-b from-[#00A1E0] via-[#0077B5] to-[#9602A7]">
-      <div class="container mx-auto px-4 py-20">
-        <div class="flex flex-col items-center mb-12">
+    <section className="relative min-h-[100vh] flex items-center bg-gradient-to-b from-[#00A1E0] via-[#0077B5] to-[#9602A7]">
+      <div className="container mx-auto px-4 py-20">
+        <div className="flex flex-col items-center mb-12">
           <img
             src="/assets/images/salesforce-logo.png"
             alt="Salesforce"
-            class="h-16 mb-6"
+            className="h-16 mb-6"
           />
-          <h2 class="text-3xl font-bold text-white text-center">
+          <h2 className="text-3xl font-bold text-white text-center">
             Soluciones Salesforce
           </h2>
         </div>
 
         <div
           ref={scrollContainer}
-          class="flex overflow-x-auto gap-6 snap-x snap-mandatory hide-scrollbar pb-8 px-4 -mx-4 touch-pan-x"
+          className="flex overflow-x-auto gap-6 snap-x snap-mandatory hide-scrollbar pb-8 px-4 -mx-4 touch-pan-x"
           style="scroll-padding: 1rem; scroll-behavior: smooth;"
         >
-          {services.map((service) => (
-            <div class="flex-none w-[85%] md:w-[calc(50%-12px)] lg:w-[calc(33.333%-16px)] snap-start">
-              <div class="group h-full relative isolate">
-                <div class="relative h-full p-6 rounded-xl backdrop-blur-md bg-white/10 border border-white/20 shadow-xl transition-all duration-500 ease-out hover:bg-white/80 group-hover:scale-[1.01] group-hover:shadow-2xl hover:border-[#00A1E0] z-10">
+          <div className="flex gap-6">
+            {services.map((service) => (
+              <div className="flex-none w-[280px] md:w-[calc(50%-12px)] lg:w-[calc(33.333%-16px)] snap-start">
+                <div className="relative h-full p-6 rounded-xl bg-white border border-gray-200 shadow-lg transition-all duration-500 ease-out hover:shadow-2xl hover:scale-[1.02] hover:z-10">
                   <svg
-                    class="w-8 h-8 text-white mb-4 transition-colors duration-500 group-hover:text-[#00A1E0]"
+                    className="w-8 h-8 text-[#00A1E0] mb-4 transition-colors duration-500"
                     fill="none"
                     viewBox="0 0 24 24"
                     stroke="currentColor"
-                    stroke-width="2"
+                    strokeWidth="2"
                   >
-                    <path stroke-linecap="round" stroke-linejoin="round" d={service.icon} />
+                    <path strokeLinecap="round" strokeLinejoin="round" d={service.icon} />
                   </svg>
-                  <h3 class="text-xl font-semibold text-white mb-4 transition-colors duration-500 group-hover:text-gray-800">
+                  <h3 className="text-xl font-semibold text-gray-800 mb-4">
                     {service.title}
                   </h3>
-                  <p class="text-white/90 transition-colors duration-500 group-hover:text-gray-600">
+                  <p className="text-gray-600">
                     {service.description}
                   </p>
                 </div>
               </div>
-            </div>
-          ))}
+            ))}
+          </div>
         </div>
+
+        <style>
+        {`
+          .hide-scrollbar::-webkit-scrollbar {
+            display: none;
+          }
+          .hide-scrollbar {
+            -ms-overflow-style: none;
+            scrollbar-width: none;
+          }
+        `}
+        </style>
       </div>
     </section>
   );
-} 
+}

@@ -41,23 +41,10 @@ export function Footer(): JSX.Element {
               <li>
                 <a href="/blog" class="text-gray-400 hover:text-white">Blog</a>
               </li>
-              <li>
-                <a href="/about" class="text-gray-400 hover:text-white">Nosotros</a>
-              </li>
             </ul>
           </div>
           
-          <div>
-            <h3 class="text-white font-semibold mb-4">Legal</h3>
-            <ul class="space-y-2">
-              <li>
-                <a href="/privacy" class="text-gray-400 hover:text-white">Privacidad</a>
-              </li>
-              <li>
-                <a href="/terms" class="text-gray-400 hover:text-white">Términos</a>
-              </li>
-            </ul>
-          </div>
+
         </div>
         
         <div class="border-t border-gray-800 mt-8 pt-8">

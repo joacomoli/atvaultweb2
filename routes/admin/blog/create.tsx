@@ -95,16 +95,18 @@ export default function CreatePost({ data }: PageProps<Data>) {
           }
         `}</style>
       </Head>
-      <div class="max-w-4xl mx-auto px-4 py-12">
-        <h1 class="text-3xl font-bold mb-8">Crear Nuevo Post</h1>
+      <div class="pt-20 pb-12">
+        <div class="max-w-4xl mx-auto px-4">
+          <h1 class="text-3xl font-bold mb-8">Crear Nuevo Post</h1>
 
-        {data?.error && (
-          <div class="bg-red-50 text-red-600 p-4 rounded-lg mb-6">
-            {data.error}
-          </div>
-        )}
+          {data?.error && (
+            <div class="bg-red-50 text-red-600 p-4 rounded-lg mb-6">
+              {data.error}
+            </div>
+          )}
 
-        <BlogForm error={data?.error} />
+          <BlogForm error={data?.error} />
+        </div>
       </div>
     </>
   );

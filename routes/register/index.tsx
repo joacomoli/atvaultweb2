@@ -4,12 +4,28 @@ import { Navbar } from "../../components/layout/Navbar.tsx";
 import { Footer } from "../../components/layout/Footer.tsx";
 import { connectDB } from "../../utils/db.ts";
 import { IUser, USERS_COLLECTION, createUser } from "../../models/User.ts";
+import { getUserFromRequest } from "../../utils/auth.ts";
+import { User } from "../../models/User.ts";
+import RegisterForm from "../../islands/RegisterForm.tsx";
 
 interface RegisterData {
   error?: string;
+  user: User | null;
 }
 
 export const handler: Handlers<RegisterData> = {
+  async GET(req, ctx) {
+    const user = await getUserFromRequest(req);
+    // Si el usuario ya está autenticado, redirigir a la página principal
+    if (user) {
+      return new Response("", {
+        status: 307,
+        headers: { Location: "/" },
+      });
+    }
+    return ctx.render({ user });
+  },
+
   async POST(req, ctx) {
     try {
       const form = await req.formData();
@@ -52,78 +68,23 @@ export const handler: Handlers<RegisterData> = {
 };
 
 export default function RegisterPage({ data }: PageProps<RegisterData>) {
+  const { user } = data;
   return (
     <>
       <Head>
         <title>Registro - AT Vault</title>
+        <meta name="description" content="Regístrate en AT Vault para acceder a contenido exclusivo y más funcionalidades." />
       </Head>
-      <Navbar />
-      <main class="min-h-screen bg-gray-50 flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8">
-        <div class="max-w-md w-full space-y-8">
-          <div>
-            <h2 class="mt-6 text-center text-3xl font-extrabold text-gray-900">
+
+      <Navbar user={user} />
+      <main class="min-h-screen bg-gray-50 pt-20 pb-12">
+        <div class="container mx-auto px-4">
+          <div class="max-w-md mx-auto">
+            <h1 class="text-3xl font-bold text-gray-900 mb-8 text-center">
               Crear una cuenta
-            </h2>
+            </h1>
+            <RegisterForm />
           </div>
-
-          {data?.error && (
-            <div class="bg-red-50 border border-red-200 text-red-600 px-4 py-3 rounded relative">
-              {data.error}
-            </div>
-          )}
-
-          <form class="mt-8 space-y-6" method="POST">
-            <div class="rounded-md shadow-sm -space-y-px">
-              <div>
-                <label for="name" class="sr-only">Nombre</label>
-                <input
-                  id="name"
-                  name="name"
-                  type="text"
-                  required
-                  class="appearance-none rounded-none relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-t-md focus:outline-none focus:ring-primary-500 focus:border-primary-500 focus:z-10 sm:text-sm"
-                  placeholder="Nombre completo"
-                />
-              </div>
-              <div>
-                <label for="email" class="sr-only">Email</label>
-                <input
-                  id="email"
-                  name="email"
-                  type="email"
-                  required
-                  class="appearance-none rounded-none relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 focus:outline-none focus:ring-primary-500 focus:border-primary-500 focus:z-10 sm:text-sm"
-                  placeholder="Email"
-                />
-              </div>
-              <div>
-                <label for="password" class="sr-only">Contraseña</label>
-                <input
-                  id="password"
-                  name="password"
-                  type="password"
-                  required
-                  class="appearance-none rounded-none relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-b-md focus:outline-none focus:ring-primary-500 focus:border-primary-500 focus:z-10 sm:text-sm"
-                  placeholder="Contraseña"
-                />
-              </div>
-            </div>
-
-            <div>
-              <button
-                type="submit"
-                class="group relative w-full flex justify-center py-2 px-4 border border-transparent text-sm font-medium rounded-md text-white bg-primary-600 hover:bg-primary-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500"
-              >
-                Registrarse
-              </button>
-            </div>
-
-            <div class="text-center">
-              <a href="/login" class="text-primary-600 hover:text-primary-500">
-                ¿Ya tienes cuenta? Inicia sesión
-              </a>
-            </div>
-          </form>
         </div>
       </main>
       <Footer />

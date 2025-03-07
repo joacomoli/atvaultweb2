@@ -9,24 +9,24 @@ interface ServiceCard {
 
 const services: ServiceCard[] = [
   {
-    title: "Backup y Recuperación",
-    description: "Protege tus datos críticos con soluciones de backup automatizadas y recuperación rápida.",
-    icon: "M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12" // Backup
+    title: "Backup & Recovery",
+    description: "Protección de datos empresariales con recuperación instantánea.",
+    icon: "M4 7v10c0 2.21 3.582 4 8 4s8-1.79 8-4V7M4 7c0 2.21 3.582 4 8 4s8-1.79 8-4M4 7c0-2.21 3.582-4 8-4s8 1.79 8 4"
   },
   {
-    title: "Gestión en la Nube",
-    description: "Administra tus datos en múltiples nubes con una única plataforma centralizada.",
-    icon: "M3 15a4 4 0 004 4h9a5 5 0 10-.1-9.999 5.002 5.002 0 10-9.78 2.096A4.001 4.001 0 003 15z" // Nube
+    title: "Disaster Recovery",
+    description: "Continuidad del negocio con replicación y recuperación ante desastres.",
+    icon: "M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"
   },
   {
-    title: "Protección Endpoints",
-    description: "Asegura los datos en dispositivos finales con protección continua y automatizada.",
-    icon: "M9.75 17L9 20l-1 1h8l-1-1-.75-3M3 13h18M5 17h14a2 2 0 002-2V5a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" // Laptop
+    title: "Cloud Data Management",
+    description: "Gestión unificada de datos en la nube y on-premise.",
+    icon: "M3 15a4 4 0 004 4h9a5 5 0 10-.1-9.999 5.002 5.002 0 10-9.78 2.096A4.001 4.001 0 003 15z"
   },
   {
-    title: "Automatización",
-    description: "Optimiza operaciones con flujos de trabajo automatizados y orquestación inteligente.",
-    icon: "M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" // Ciclo
+    title: "Ransomware Protection",
+    description: "Protección avanzada contra amenazas y recuperación inmediata.",
+    icon: "M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"
   }
 ];
 
@@ -60,7 +60,6 @@ export function CommvaultSection() {
     isDragging.value = true;
     startX.value = e.touches[0].pageX - scrollContainer.value.offsetLeft;
     scrollLeft.value = scrollContainer.value.scrollLeft;
-    e.preventDefault();
   };
 
   const handleTouchMove = (e: TouchEvent) => {
@@ -95,49 +94,61 @@ export function CommvaultSection() {
   }, [scrollContainer.value]);
 
   return (
-    <section class="relative min-h-[100vh] flex items-center bg-gradient-to-b from-[#9602A7] via-[#7A1B8B] to-[#4F1155]">
-      <div class="container mx-auto px-4 py-20">
-        <div class="flex flex-col items-center mb-12">
+    <section className="relative min-h-[100vh] flex items-center bg-gradient-to-b from-[#9602A7] via-[#7A1B8B] to-[#4F1155]">
+      <div className="container mx-auto px-4 py-20">
+        <div className="flex flex-col items-center mb-12">
           <img
             src="/assets/images/commvault-logo.png"
             alt="Commvault"
-            class="h-16 mb-6 filter brightness-0 invert"
+            className="h-16 mb-6 filter brightness-0 invert"
           />
-          <h2 class="text-3xl font-bold text-white text-center">
+          <h2 className="text-3xl font-bold text-white text-center">
             Soluciones Commvault
           </h2>
         </div>
 
         <div
           ref={scrollContainer}
-          class="flex overflow-x-auto gap-6 snap-x snap-mandatory hide-scrollbar pb-8 px-4 -mx-4 touch-pan-x"
+          className="flex overflow-x-auto gap-6 snap-x snap-mandatory hide-scrollbar pb-8 px-4 -mx-4 touch-pan-x"
           style="scroll-padding: 1rem; scroll-behavior: smooth;"
         >
-          {services.map((service) => (
-            <div class="flex-none w-[85%] md:w-[calc(50%-12px)] lg:w-[calc(33.333%-16px)] snap-start">
-              <div class="group h-full relative isolate">
-                <div class="relative h-full p-6 rounded-xl backdrop-blur-md bg-white/10 border border-white/20 shadow-xl transition-all duration-500 ease-out hover:bg-white/80 group-hover:scale-[1.01] group-hover:shadow-2xl hover:border-[#9602A7] z-10">
+          <div className="flex gap-6">
+            {services.map((service) => (
+              <div className="flex-none w-[280px] md:w-[calc(50%-12px)] lg:w-[calc(33.333%-16px)] snap-start">
+                <div className="relative h-full p-6 rounded-xl bg-white border border-gray-200 shadow-lg transition-all duration-500 ease-out hover:shadow-2xl hover:scale-[1.02] hover:z-10">
                   <svg
-                    class="w-8 h-8 text-white mb-4 transition-colors duration-500 group-hover:text-[#9602A7]"
+                    className="w-8 h-8 text-[#9602A7] mb-4 transition-colors duration-500"
                     fill="none"
                     viewBox="0 0 24 24"
                     stroke="currentColor"
-                    stroke-width="2"
+                    strokeWidth="2"
                   >
-                    <path stroke-linecap="round" stroke-linejoin="round" d={service.icon} />
+                    <path strokeLinecap="round" strokeLinejoin="round" d={service.icon} />
                   </svg>
-                  <h3 class="text-xl font-semibold text-white mb-4 transition-colors duration-500 group-hover:text-gray-800">
+                  <h3 className="text-xl font-semibold text-gray-800 mb-4">
                     {service.title}
                   </h3>
-                  <p class="text-white/90 transition-colors duration-500 group-hover:text-gray-600">
+                  <p className="text-gray-600">
                     {service.description}
                   </p>
                 </div>
               </div>
-            </div>
-          ))}
+            ))}
+          </div>
         </div>
+
+        <style>
+        {`
+          .hide-scrollbar::-webkit-scrollbar {
+            display: none;
+          }
+          .hide-scrollbar {
+            -ms-overflow-style: none;
+            scrollbar-width: none;
+          }
+        `}
+        </style>
       </div>
     </section>
   );
-} 
+}

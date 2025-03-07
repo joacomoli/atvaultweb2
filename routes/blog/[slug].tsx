@@ -6,47 +6,51 @@ import { Navbar } from "../../components/layout/Navbar.tsx";
 import { Footer } from "../../components/layout/Footer.tsx";
 import { ObjectId } from "mongodb";
 import { Head } from "$fresh/runtime.ts";
+import { getUserFromRequest } from "../../utils/auth.ts";
+import { User } from "../../models/User.ts";
+import { marked } from "https://esm.sh/marked@11.1.1";
 
 interface Data {
-  post: IPost | null;
+  post: IPost & { author: { name: string; image?: string } };
+  user: User | null;
 }
 
 export const handler: Handlers<Data> = {
-  async GET(_req, ctx) {
+  async GET(req, ctx) {
     try {
+      const { slug } = ctx.params;
       const db = await connectDB();
-      const post = await db.collection<IPost>(POSTS_COLLECTION).findOne({
-        slug: ctx.params.slug,
-        status: 'published'
-      });
 
+      const post = await db.collection<IPost>(POSTS_COLLECTION).findOne({ slug });
       if (!post) {
-        return ctx.renderNotFound();
+        return new Response("Post no encontrado", { status: 404 });
       }
 
-      // Obtener el autor
+      // Obtener el autor del post
       const author = await db.collection(USERS_COLLECTION).findOne(
         { _id: new ObjectId(post.author.toString()) },
         { projection: { name: 1, image: 1 } }
       );
 
-      // Agregar la información del autor al post
-      post.author = author || { name: 'Anónimo' };
+      const postWithAuthor = {
+        ...post,
+        author: author || { name: "Anónimo" }
+      };
 
-      return ctx.render({ post });
+      // Obtener el usuario actual
+      const user = await getUserFromRequest(req);
+
+      return ctx.render({ post: postWithAuthor, user });
     } catch (error) {
-      console.error('Error al obtener post:', error);
-      return ctx.renderNotFound();
+      console.error('Error al obtener el post:', error);
+      return new Response("Error interno del servidor", { status: 500 });
     }
   },
 };
 
-export default function PostPage({ data }: PageProps<Data>) {
-  const { post } = data;
-
-  if (!post) {
-    return <div>Post no encontrado</div>;
-  }
+export default function BlogPostPage({ data }: PageProps<Data>) {
+  const { post, user } = data;
+  const content = marked(post.content);
 
   return (
     <>
@@ -138,44 +142,61 @@ export default function PostPage({ data }: PageProps<Data>) {
           }
         `}</style>
       </Head>
-      <Navbar />
-      <article class="max-w-4xl mx-auto px-4 py-12">
-        <header class="mb-8">
-          <h1 class="text-4xl font-bold mb-4">{post.title}</h1>
-          <div class="flex items-center text-gray-600">
-            <span class="mr-4">Por {post.author.name}</span>
-            <time dateTime={post.publishedAt?.toString()}>
-              {new Date(post.publishedAt || post.createdAt).toLocaleDateString()}
-            </time>
+      <Navbar user={user} />
+      <main class="min-h-screen bg-gray-50 pt-20 pb-12">
+        <article class="container mx-auto px-4">
+          {/* Hero Section */}
+          <div class="relative h-[400px] md:h-[500px] mb-12">
+            {post.coverImage ? (
+              <img
+                src={post.coverImage}
+                alt={post.title}
+                class="w-full h-full object-cover rounded-2xl shadow-xl"
+              />
+            ) : (
+              <div class="w-full h-full bg-gradient-to-r from-primary-500 to-primary-700 rounded-2xl shadow-xl flex items-center justify-center">
+                <h1 class="text-4xl md:text-5xl font-bold text-white text-center px-4">{post.title}</h1>
+              </div>
+            )}
+            <div class="absolute inset-0 bg-black bg-opacity-40 rounded-2xl flex items-center justify-center">
+              <div class="text-center text-white px-4">
+                <h1 class="text-4xl md:text-5xl font-bold mb-4">{post.title}</h1>
+                <div class="flex items-center justify-center gap-4 text-lg">
+                  <span class="flex items-center gap-2">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                    </svg>
+                    {post.author.name}
+                  </span>
+                  <span class="flex items-center gap-2">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                    </svg>
+                    {new Date(post.publishedAt).toLocaleDateString('es-ES', {
+                      year: 'numeric',
+                      month: 'long',
+                      day: 'numeric'
+                    })}
+                  </span>
+                  <span class="flex items-center gap-2">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                    </svg>
+                    {post.readTime || "5 min"}
+                  </span>
+                </div>
+              </div>
+            </div>
           </div>
-        </header>
 
-        {post.coverImage && (
-          <img
-            src={post.coverImage}
-            alt={post.title}
-            class="w-full h-96 object-cover rounded-lg mb-8"
-          />
-        )}
-
-        <div 
-          class="blog-content"
-          dangerouslySetInnerHTML={{ __html: post.content }}
-        />
-
-        <footer class="mt-12 pt-8 border-t border-gray-200">
-          <div class="flex flex-wrap gap-2">
-            {post.tags?.map((tag) => (
-              <span
-                key={tag}
-                class="px-3 py-1 bg-gray-100 text-gray-700 rounded-full text-sm"
-              >
-                {tag}
-              </span>
-            ))}
+          {/* Content */}
+          <div class="max-w-3xl mx-auto">
+            <div class="bg-white rounded-2xl shadow-lg p-8 md:p-12">
+              <div class="prose prose-lg max-w-none blog-content" dangerouslySetInnerHTML={{ __html: content }} />
+            </div>
           </div>
-        </footer>
-      </article>
+        </article>
+      </main>
       <Footer />
     </>
   );
