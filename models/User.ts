@@ -14,6 +14,7 @@ export interface IUser {
   email: string;
   password: string;
   role: UserRole;
+  hasLicense: boolean;
   avatar?: string;
   createdAt?: Date;
   updatedAt?: Date;
@@ -21,16 +22,22 @@ export interface IUser {
 
 export const USERS_COLLECTION = 'users';
 
-export async function createUser(data: Omit<IUser, '_id' | 'createdAt' | 'updatedAt'>) {
-  const now = new Date();
+export async function createUser(data: {
+  name: string;
+  email: string;
+  password: string;
+  role: UserRole;
+}): Promise<IUser> {
   const hashedPassword = await bcrypt.hash(data.password);
   
   return {
-    ...data,
-    role: data.role || UserRole.STANDARD,
+    name: data.name,
+    email: data.email.toLowerCase(),
     password: hashedPassword,
-    createdAt: now,
-    updatedAt: now,
+    role: data.role,
+    hasLicense: false,
+    createdAt: new Date(),
+    updatedAt: new Date(),
   };
 }
 

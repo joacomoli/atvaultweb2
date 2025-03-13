@@ -18,7 +18,7 @@ export async function createAuthToken(userId: string): Promise<string> {
   const payload = {
     iss: "atvault",
     sub: userId,
-    exp: getNumericDate(60 * 60 * 24), // 24 horas
+    exp: getNumericDate(60 * 60 * 24 * 7), // 7 días
     iat: getNumericDate(0)
   };
 
@@ -31,9 +31,11 @@ export async function createAuthToken(userId: string): Promise<string> {
 
 export async function verifyAuthToken(token: string) {
   try {
-    return await verify(token, cryptoKey);
+    const payload = await verify(token, cryptoKey);
+    return payload;
   } catch (error) {
-    console.error("Error verificando token:", error);
+    // Si el token está expirado o es inválido, simplemente retornamos null
+    // sin mostrar el error en la consola
     return null;
   }
 }
@@ -56,7 +58,10 @@ export async function getUserFromRequest(req: Request): Promise<IUser | null> {
 
     return user;
   } catch (error) {
-    console.error("Error al obtener usuario:", error);
+    // Solo mostramos errores críticos que no sean de token expirado
+    if (!(error instanceof RangeError && error.message.includes("jwt is expired"))) {
+      console.error("Error al obtener usuario:", error);
+    }
     return null;
   }
 }
@@ -79,16 +84,46 @@ export async function authenticateUser(email: string, password: string): Promise
 }
 
 export function setAuthCookie(res: Response, token: string) {
-  res.headers.set(
+  const expires = new Date();
+  expires.setDate(expires.getDate() + 7);
+  const expiresStr = expires.toUTCString();
+  
+  res.headers.append(
     "Set-Cookie",
-    `auth=${token}; Path=/; HttpOnly; SameSite=Lax; Max-Age=86400`
+    `auth=${token}; Path=/; HttpOnly; Expires=${expiresStr}; SameSite=Lax`
   );
 }
 
-export function clearAuthCookie(res: Response) {
-  res.headers.set(
+export function setUserCookies(res: Response, name: string, role: string) {
+  const expires = new Date();
+  expires.setDate(expires.getDate() + 7);
+  const expiresStr = expires.toUTCString();
+  
+  // Establecer cada cookie por separado
+  res.headers.append(
     "Set-Cookie",
-    `auth=; Path=/; HttpOnly; SameSite=Lax; Max-Age=0`
+    `userName=${encodeURIComponent(name)}; Path=/; Expires=${expiresStr}; SameSite=Lax`
+  );
+  
+  res.headers.append(
+    "Set-Cookie",
+    `userRole=${encodeURIComponent(role)}; Path=/; Expires=${expiresStr}; SameSite=Lax`
+  );
+}
+
+export function clearAllCookies(res: Response) {
+  // Limpiar cada cookie por separado
+  res.headers.append(
+    "Set-Cookie",
+    "auth=; Path=/; HttpOnly; SameSite=Lax; Max-Age=0"
+  );
+  res.headers.append(
+    "Set-Cookie",
+    "userName=; Path=/; SameSite=Lax; Max-Age=0"
+  );
+  res.headers.append(
+    "Set-Cookie",
+    "userRole=; Path=/; SameSite=Lax; Max-Age=0"
   );
 }
 

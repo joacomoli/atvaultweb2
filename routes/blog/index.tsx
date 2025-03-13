@@ -7,200 +7,308 @@ import { Head } from "$fresh/runtime.ts";
 import { Navbar } from "../../components/layout/Navbar.tsx";
 import { Footer } from "../../components/layout/Footer.tsx";
 import { getUserFromRequest } from "../../utils/auth.ts";
-import { UserRole } from "../../models/User.ts";
+import { User } from "../../models/User.ts";
+import { PostCard } from "../../components/blog/PostCard.tsx";
+import { Input } from "../../components/ui/Input.tsx";
+import { Badge } from "../../components/ui/Badge.tsx";
+import { Button } from "../../components/ui/Button.tsx";
+import { Search, X } from "../../components/icons/index.tsx";
 
 interface Data {
-  posts: IPost[];
-  isAdmin: boolean;
+  posts: (IPost & { author: { name: string; image?: string } })[];
+  categories: { name: string; count: number }[];
+  tags: { name: string; count: number }[];
+  user: User | null;
   searchTerm?: string;
+  activeCategory?: string;
 }
 
 export const handler: Handlers<Data> = {
-  async GET(req, _ctx) {
+  async GET(req, ctx) {
+    console.log("1. Iniciando GET request");
+    const db = await connectDB();
+    console.log("2. Conexión a DB establecida");
+    
+    const url = new URL(req.url);
+    const searchTerm = url.searchParams.get("search") || "";
+    const activeCategory = url.searchParams.get("category") || "all";
+    console.log("3. Parámetros de URL:", { searchTerm, activeCategory });
+
+    // Obtener usuario autenticado
+    const user = await getUserFromRequest(req);
+    console.log("4. Usuario:", user ? "Autenticado" : "No autenticado");
+
     try {
-      const url = new URL(req.url);
-      const searchTerm = url.searchParams.get("search") || "";
-      
-      const db = await connectDB();
+      console.log("5. Iniciando búsqueda de posts");
       
       // Construir la consulta base
-      let query: any = { status: 'published' };
-      
-      // Agregar búsqueda si hay término
+      let query: any = { status: "published" };
+      if (activeCategory !== "all") {
+        query.category = activeCategory;
+      }
       if (searchTerm) {
-        query = {
-          ...query,
-          $or: [
-            { title: { $regex: searchTerm, $options: 'i' } },
-            { content: { $regex: searchTerm, $options: 'i' } },
-            { excerpt: { $regex: searchTerm, $options: 'i' } },
-            { category: { $regex: searchTerm, $options: 'i' } }
-          ]
-        };
+        query.$or = [
+          { title: { $regex: searchTerm, $options: "i" } },
+          { content: { $regex: searchTerm, $options: "i" } },
+          { excerpt: { $regex: searchTerm, $options: "i" } },
+          { category: { $regex: searchTerm, $options: "i" } },
+          { tags: { $regex: searchTerm, $options: "i" } }
+        ];
+      }
+      
+      console.log("6. Query construido:", JSON.stringify(query));
+
+      // Verificar documentos totales en la colección
+      const totalDocs = await db.collection(POSTS_COLLECTION).countDocuments();
+      console.log("7. Total documentos en la colección:", totalDocs);
+
+      // Obtener un documento de ejemplo
+      const sampleDoc = await db.collection(POSTS_COLLECTION).findOne({});
+      console.log("8. Documento de ejemplo:", JSON.stringify(sampleDoc, null, 2));
+
+      // Obtener posts con autores
+      const posts = await db.collection(POSTS_COLLECTION)
+        .aggregate([
+          { $match: query },
+          { $sort: { publishedAt: -1, createdAt: -1 } },
+          {
+            $lookup: {
+              from: USERS_COLLECTION,
+              localField: "author",
+              foreignField: "_id",
+              as: "author"
+            }
+          },
+          {
+            $unwind: {
+              path: "$author",
+              preserveNullAndEmptyArrays: true
+            }
+          },
+          {
+            $project: {
+              _id: 1,
+              title: 1,
+              slug: 1,
+              excerpt: 1,
+              content: 1,
+              coverImage: 1,
+              category: 1,
+              tags: 1,
+              status: 1,
+              createdAt: 1,
+              publishedAt: 1,
+              "author.name": 1,
+              "author.image": 1
+            }
+          }
+        ]).toArray();
+
+      console.log("9. Posts encontrados:", posts.length);
+      if (posts.length > 0) {
+        console.log("10. Primer post:", JSON.stringify(posts[0], null, 2));
       }
 
-      const posts = await db.collection<IPost>(POSTS_COLLECTION)
-        .find(query)
-        .sort({ publishedAt: -1 })
-        .toArray();
+      // Obtener categorías con conteo
+      const categories = await db.collection(POSTS_COLLECTION).aggregate([
+        { $match: { status: "published" } },
+        { $group: { _id: "$category", count: { $sum: 1 } } },
+        { $project: { name: "$_id", count: 1, _id: 0 } },
+        { $sort: { count: -1 } }
+      ]).toArray();
 
-      // Obtener los autores de los posts
-      const authorIds = posts.map(post => new ObjectId(post.author.toString()));
-      const authors = await db.collection(USERS_COLLECTION)
-        .find(
-          { _id: { $in: authorIds } },
-          { projection: { name: 1, image: 1 } }
-        )
-        .toArray();
+      console.log("11. Categorías encontradas:", categories.length);
 
-      const authorMap = new Map(authors.map(author => [author._id.toString(), author]));
-      const postsWithAuthors = posts.map(post => ({
-        ...post,
-        author: authorMap.get(post.author.toString()) || { name: 'Anónimo' }
-      }));
+      // Obtener tags con conteo
+      const tags = await db.collection(POSTS_COLLECTION).aggregate([
+        { $match: { status: "published" } },
+        { $unwind: "$tags" },
+        { $group: { _id: "$tags", count: { $sum: 1 } } },
+        { $project: { name: "$_id", count: 1, _id: 0 } },
+        { $sort: { count: -1 } }
+      ]).toArray();
 
-      const user = await getUserFromRequest(req);
-      const isAdmin = user?.role === UserRole.ADMIN;
+      console.log("12. Tags encontrados:", tags.length);
 
-      return _ctx.render({ posts: postsWithAuthors, isAdmin, searchTerm });
+      return ctx.render({ 
+        posts, 
+        categories, 
+        tags, 
+        user, 
+        searchTerm, 
+        activeCategory 
+      });
     } catch (error) {
-      console.error('Error al obtener posts:', error);
-      return _ctx.render({ posts: [], isAdmin: false, searchTerm: "" });
+      console.error("13. ERROR:", error);
+      return ctx.render({ 
+        posts: [], 
+        categories: [], 
+        tags: [], 
+        user, 
+        searchTerm, 
+        activeCategory 
+      });
     }
-  },
+  }
 };
 
 export default function BlogPage({ data }: PageProps<Data>) {
-  const { posts, isAdmin, searchTerm = "" } = data;
+  const { posts, categories, tags, user, searchTerm, activeCategory } = data;
 
   return (
     <>
       <Head>
         <title>Blog - AT Vault</title>
-        <meta name="description" content="Explora nuestro blog con artículos sobre tecnología, Salesforce, y más." />
+        <meta name="description" content="Explora nuestros artículos sobre tecnología, innovación y soluciones empresariales." />
       </Head>
 
-      <Navbar />
-      <main class="min-h-screen bg-gray-50 pt-20 pb-12">
-        <div class="container mx-auto px-4">
-          {/* Hero Section */}
-          <div class="text-center mb-12">
-            <h1 class="text-4xl md:text-5xl font-bold text-gray-900 mb-4">
-              Blog AT Vault
-            </h1>
-            <p class="text-xl text-gray-600 max-w-2xl mx-auto">
-              Descubre artículos sobre tecnología, desarrollo, y las últimas tendencias en el mundo digital.
-            </p>
-          </div>
+      <Navbar user={user} active="blog" />
 
-          {/* Barra de búsqueda */}
-          <form class="max-w-2xl mx-auto mb-12" method="GET">
-            <div class="relative">
-              <input
-                type="text"
-                name="search"
-                value={searchTerm}
-                placeholder="Buscar artículos..."
-                class="w-full px-6 py-3 pl-12 border border-gray-300 rounded-full focus:outline-none focus:ring-2 focus:ring-primary-500 shadow-sm"
-              />
-              <svg
-                class="absolute left-4 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-400"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
-                />
-              </svg>
-              {searchTerm && (
-                <a
-                  href="/blog"
-                  class="absolute right-4 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600"
-                >
-                  <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                  </svg>
-                </a>
+      <main class="flex-1">
+        <div class="container relative">
+          <div class="mx-auto max-w-7xl py-16">
+            <div class="flex items-center justify-between gap-4 mb-8">
+              <div class="space-y-1">
+                <h1 class="text-3xl font-bold tracking-tight">Blog</h1>
+                <p class="text-muted-foreground">
+                  Explora nuestros artículos sobre tecnología, innovación y soluciones empresariales.
+                </p>
+              </div>
+              {user && (
+                <Button onClick={() => window.location.href = "/blog/new"}>
+                  Crear Post
+                </Button>
               )}
             </div>
-          </form>
 
-          {/* Resultados de búsqueda */}
-          {searchTerm && (
-            <div class="max-w-2xl mx-auto mb-8">
-              <p class="text-gray-600">
-                {posts.length === 0 
-                  ? `No se encontraron resultados para "${searchTerm}"` 
-                  : `Se encontraron ${posts.length} resultado${posts.length === 1 ? '' : 's'} para "${searchTerm}"`}
-              </p>
-            </div>
-          )}
+            <div class="flex flex-col md:flex-row gap-8">
+              {/* Sidebar */}
+              <aside class="w-full md:w-64 space-y-8">
+                <div class="space-y-4">
+                  <h2 class="text-xl font-semibold tracking-tight">Categorías</h2>
+                  <div class="flex flex-col gap-2">
+                    <Button
+                      variant={activeCategory === "all" ? "default" : "ghost"}
+                      class="justify-start h-9"
+                      onClick={() => window.location.href = "/blog"}
+                    >
+                      Todas
+                    </Button>
+                    {categories.map((category) => (
+                      <Button
+                        key={category.name}
+                        variant={activeCategory === category.name ? "default" : "ghost"}
+                        class="justify-start h-9"
+                        onClick={() => window.location.href = `/blog?category=${encodeURIComponent(category.name)}`}
+                      >
+                        {category.name} ({category.count})
+                      </Button>
+                    ))}
+                  </div>
+                </div>
 
-          {/* Grid de posts */}
-          {posts.length === 0 ? (
-            <div class="text-center py-12">
-              <h2 class="text-2xl font-semibold text-gray-700 mb-4">
-                No hay posts disponibles
-              </h2>
-              <p class="text-gray-600">
-                {searchTerm 
-                  ? "Intenta con otros términos de búsqueda"
-                  : "Pronto publicaremos contenido interesante. ¡Vuelve más tarde!"}
-              </p>
-            </div>
-          ) : (
-            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-              {posts.map((post) => (
-                <article key={post._id?.toString()} class="bg-white rounded-xl shadow-md overflow-hidden hover:shadow-xl transition-all duration-300">
-                  <div class="relative h-48">
-                    <img
-                      src={post.coverImage || '/assets/images/default-post.jpg'}
-                      alt={post.title}
-                      class="w-full h-full object-cover"
+                <div class="space-y-4">
+                  <h2 class="text-xl font-semibold tracking-tight">Etiquetas populares</h2>
+                  <div class="flex flex-wrap gap-2">
+                    {tags.map((tag) => (
+                      <Badge
+                        key={tag.name}
+                        variant="secondary"
+                        class="cursor-pointer"
+                        onClick={() => window.location.href = `/blog?search=${encodeURIComponent(tag.name)}`}
+                      >
+                        {tag.name} ({tag.count})
+                      </Badge>
+                    ))}
+                  </div>
+                </div>
+              </aside>
+
+              {/* Main content */}
+              <div class="flex-1 space-y-6">
+                <div class="space-y-4">
+                  <form action="/blog" method="get" class="relative">
+                    <Search class="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                    <Input
+                      type="search"
+                      name="search"
+                      placeholder="Buscar artículos..."
+                      value={searchTerm}
+                      class="pl-10 pr-10 w-full"
                     />
-                    <div class="absolute top-4 left-4">
-                      <span class="px-3 py-1 bg-primary-600 text-white rounded-full text-sm">
-                        {post.category || 'General'}
-                      </span>
+                    {searchTerm && (
+                      <button
+                        type="button"
+                        onClick={() => window.location.href = "/blog"}
+                        class="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground hover:text-foreground transition-colors"
+                      >
+                        <X />
+                      </button>
+                    )}
+                  </form>
+
+                  {(searchTerm || activeCategory !== "all") && (
+                    <div class="flex items-center gap-2">
+                      <span class="text-sm text-muted-foreground">Filtros:</span>
+                      {searchTerm && (
+                        <Badge variant="secondary" class="gap-1 px-2 py-0.5">
+                          {searchTerm}
+                          <button
+                            onClick={() => window.location.href = "/blog"}
+                            class="ml-1 ring-offset-background transition-colors hover:text-foreground"
+                          >
+                            <X class="h-3 w-3" />
+                          </button>
+                        </Badge>
+                      )}
+                      {activeCategory !== "all" && (
+                        <Badge variant="secondary" class="gap-1 px-2 py-0.5">
+                          {activeCategory}
+                          <button
+                            onClick={() => window.location.href = "/blog"}
+                            class="ml-1 ring-offset-background transition-colors hover:text-foreground"
+                          >
+                            <X class="h-3 w-3" />
+                          </button>
+                        </Badge>
+                      )}
+                      <Button
+                        variant="link"
+                        class="text-sm text-muted-foreground hover:text-foreground px-0"
+                        onClick={() => window.location.href = "/blog"}
+                      >
+                        Limpiar filtros
+                      </Button>
+                    </div>
+                  )}
+                </div>
+
+                {posts.length > 0 ? (
+                  <div class="grid gap-6 sm:grid-cols-2">
+                    {posts.map((post) => (
+                      <PostCard key={post._id.toString()} post={post} searchTerm={searchTerm} />
+                    ))}
+                  </div>
+                ) : (
+                  <div class="flex min-h-[400px] flex-col items-center justify-center text-center">
+                    <div class="mx-auto flex max-w-[420px] flex-col items-center justify-center text-center">
+                      <div class="flex h-20 w-20 items-center justify-center rounded-full bg-muted">
+                        <Search class="h-10 w-10 text-muted-foreground" />
+                      </div>
+                      <h2 class="mt-6 text-xl font-semibold">No se encontraron artículos</h2>
+                      <p class="mt-2 text-center text-sm text-muted-foreground">
+                        No se encontraron artículos que coincidan con tu búsqueda. Intenta con otros términos.
+                      </p>
                     </div>
                   </div>
-                  <div class="p-6">
-                    <h2 class="text-xl font-bold text-gray-900 mb-3">
-                      <a href={`/blog/${post.slug}`} class="hover:text-primary-600 transition-colors">
-                        {post.title}
-                      </a>
-                    </h2>
-                    <p class="text-gray-600 mb-4 line-clamp-2">{post.excerpt}</p>
-                    <div class="flex items-center justify-between text-sm text-gray-500">
-                      <div class="flex items-center gap-2">
-                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
-                        </svg>
-                        <span>{new Date(post.publishedAt).toLocaleDateString('es-ES', {
-                          year: 'numeric',
-                          month: 'long',
-                          day: 'numeric'
-                        })}</span>
-                      </div>
-                      <div class="flex items-center gap-2">
-                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
-                        </svg>
-                        <span>{post.readTime || "5 min"}</span>
-                      </div>
-                    </div>
-                  </div>
-                </article>
-              ))}
+                )}
+              </div>
             </div>
-          )}
+          </div>
         </div>
       </main>
-      <Footer />
+
+      <Footer user={user} />
     </>
   );
 } 

@@ -11,6 +11,8 @@
     "$std/": "https://deno.land/std@0.193.0/",
     "bcrypt": "https://deno.land/x/bcrypt@v0.4.1/mod.ts",
     "mongodb": "npm:mongodb@5.7.0",
-    "marked": "https://esm.sh/marked@11.1.1"
+    "marked": "https://esm.sh/marked@11.1.1",
+    "tailwindcss": "npm:tailwindcss@3.4.1",
+    "@tailwindcss/typography": "npm:@tailwindcss/typography@0.5.10"
   }
 } 

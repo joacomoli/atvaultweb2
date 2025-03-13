@@ -1,29 +1,45 @@
 import { ObjectId } from "mongodb";
 
+export const POSTS_COLLECTION = "posts";
+
 export interface IPost {
   _id?: ObjectId;
   title: string;
   slug: string;
-  excerpt: string;
   content: string;
+  excerpt: string;
   coverImage?: string;
-  status: 'draft' | 'published';
-  publishedAt: Date;
-  author: ObjectId | string;
-  createdAt?: Date;
-  updatedAt?: Date;
+  category: string;
+  tags: string[];
+  author: ObjectId;
+  status: "draft" | "published";
+  publishedAt?: Date;
+  createdAt: Date;
+  updatedAt: Date;
 }
 
-export const POSTS_COLLECTION = 'posts';
-
-export function createPost(data: Omit<IPost, '_id' | 'createdAt' | 'updatedAt'>) {
+export function createPost(data: Partial<IPost>): IPost {
   const now = new Date();
   return {
-    ...data,
-    status: data.status || 'published',
+    title: "",
+    slug: "",
+    content: "",
+    excerpt: "",
+    category: "General",
+    tags: [],
+    author: new ObjectId(),
+    status: "draft",
     createdAt: now,
     updatedAt: now,
+    ...data
   };
+}
+
+export function generateSlug(title: string): string {
+  return title
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/(^-|-$)/g, "");
 }
 
 export function updatePost(data: Partial<IPost>) {

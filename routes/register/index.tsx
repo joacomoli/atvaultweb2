@@ -76,18 +76,20 @@ export default function RegisterPage({ data }: PageProps<RegisterData>) {
         <meta name="description" content="Regístrate en AT Vault para acceder a contenido exclusivo y más funcionalidades." />
       </Head>
 
-      <Navbar user={user} />
-      <main class="min-h-screen bg-gray-50 pt-20 pb-12">
-        <div class="container mx-auto px-4">
-          <div class="max-w-md mx-auto">
-            <h1 class="text-3xl font-bold text-gray-900 mb-8 text-center">
-              Crear una cuenta
-            </h1>
-            <RegisterForm />
+      <div class="min-h-screen flex flex-col">
+        <Navbar user={user} />
+        <main class="flex-grow bg-gray-50 pt-20 pb-12">
+          <div class="container mx-auto px-4">
+            <div class="max-w-md mx-auto">
+              <h1 class="text-3xl font-bold text-gray-900 mb-8 text-center">
+                Crear una cuenta
+              </h1>
+              <RegisterForm />
+            </div>
           </div>
-        </div>
-      </main>
-      <Footer />
+        </main>
+        <Footer user={null} />
+      </div>
     </>
   );
 } 

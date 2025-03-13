@@ -33,18 +33,20 @@ export default function LoginPage({ data }: PageProps<Data>) {
         <meta name="description" content="Inicia sesión en AT Vault para acceder a tu cuenta y contenido exclusivo." />
       </Head>
 
-      <Navbar user={user} />
-      <main class="min-h-screen bg-gray-50 pt-20 pb-12">
-        <div class="container mx-auto px-4">
-          <div class="max-w-md mx-auto">
-            <h1 class="text-3xl font-bold text-gray-900 mb-8 text-center">
-              Iniciar Sesión
-            </h1>
-            <LoginForm />
+      <div class="min-h-screen flex flex-col">
+        <Navbar user={user} />
+        <main class="flex-grow bg-gray-50 pt-20 pb-12">
+          <div class="container mx-auto px-4">
+            <div class="max-w-md mx-auto">
+              <h1 class="text-3xl font-bold text-gray-900 mb-8 text-center">
+                Iniciar Sesión
+              </h1>
+              <LoginForm />
+            </div>
           </div>
-        </div>
-      </main>
-      <Footer />
+        </main>
+        <Footer user={null} />
+      </div>
     </>
   );
 } 

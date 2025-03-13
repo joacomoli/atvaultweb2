@@ -10,12 +10,23 @@ import * as $admin_blog_index from "./routes/admin/blog/index.tsx";
 import * as $api_admin_blog_posts_slug_ from "./routes/api/admin/blog/posts/[slug].ts";
 import * as $api_admin_blog_posts_index from "./routes/api/admin/blog/posts/index.ts";
 import * as $api_auth_check from "./routes/api/auth/check.ts";
+import * as $api_chat_id_index from "./routes/api/chat/[id]/index.ts";
+import * as $api_chat_id_messages from "./routes/api/chat/[id]/messages.tsx";
+import * as $api_chat_id_messages_index from "./routes/api/chat/[id]/messages/index.ts";
+import * as $api_chat_id_speech from "./routes/api/chat/[id]/speech.ts";
+import * as $api_chat_id_transcribe from "./routes/api/chat/[id]/transcribe.ts";
+import * as $api_chat_index from "./routes/api/chat/index.tsx";
 import * as $api_joke from "./routes/api/joke.ts";
 import * as $api_login from "./routes/api/login.ts";
+import * as $api_logout from "./routes/api/logout.ts";
+import * as $api_posts from "./routes/api/posts.ts";
 import * as $api_register from "./routes/api/register.ts";
 import * as $api_upload from "./routes/api/upload.ts";
+import * as $api_user from "./routes/api/user.ts";
 import * as $blog_slug_ from "./routes/blog/[slug].tsx";
 import * as $blog_index from "./routes/blog/index.tsx";
+import * as $blog_new from "./routes/blog/new.tsx";
+import * as $chat_index from "./routes/chat/index.tsx";
 import * as $greet_name_ from "./routes/greet/[name].tsx";
 import * as $index from "./routes/index.tsx";
 import * as $login_index from "./routes/login/index.tsx";
@@ -23,12 +34,15 @@ import * as $logout from "./routes/logout.ts";
 import * as $profile_index from "./routes/profile/index.tsx";
 import * as $register_index from "./routes/register/index.tsx";
 import * as $BlogForm from "./islands/BlogForm.tsx";
+import * as $ChatInterface from "./islands/ChatInterface.tsx";
 import * as $ClientsCarousel from "./islands/ClientsCarousel.tsx";
 import * as $Counter from "./islands/Counter.tsx";
+import * as $Editor from "./islands/Editor.tsx";
 import * as $LoginForm from "./islands/LoginForm.tsx";
 import * as $Navbar from "./islands/Navbar.tsx";
 import * as $RegisterForm from "./islands/RegisterForm.tsx";
 import * as $RichTextEditor from "./islands/RichTextEditor.tsx";
+import * as $ThemeProvider from "./islands/ThemeProvider.tsx";
 import { type Manifest } from "$fresh/server.ts";
 
 const manifest = {
@@ -41,12 +55,23 @@ const manifest = {
     "./routes/api/admin/blog/posts/[slug].ts": $api_admin_blog_posts_slug_,
     "./routes/api/admin/blog/posts/index.ts": $api_admin_blog_posts_index,
     "./routes/api/auth/check.ts": $api_auth_check,
+    "./routes/api/chat/[id]/index.ts": $api_chat_id_index,
+    "./routes/api/chat/[id]/messages.tsx": $api_chat_id_messages,
+    "./routes/api/chat/[id]/messages/index.ts": $api_chat_id_messages_index,
+    "./routes/api/chat/[id]/speech.ts": $api_chat_id_speech,
+    "./routes/api/chat/[id]/transcribe.ts": $api_chat_id_transcribe,
+    "./routes/api/chat/index.tsx": $api_chat_index,
     "./routes/api/joke.ts": $api_joke,
     "./routes/api/login.ts": $api_login,
+    "./routes/api/logout.ts": $api_logout,
+    "./routes/api/posts.ts": $api_posts,
     "./routes/api/register.ts": $api_register,
     "./routes/api/upload.ts": $api_upload,
+    "./routes/api/user.ts": $api_user,
     "./routes/blog/[slug].tsx": $blog_slug_,
     "./routes/blog/index.tsx": $blog_index,
+    "./routes/blog/new.tsx": $blog_new,
+    "./routes/chat/index.tsx": $chat_index,
     "./routes/greet/[name].tsx": $greet_name_,
     "./routes/index.tsx": $index,
     "./routes/login/index.tsx": $login_index,
@@ -56,12 +81,15 @@ const manifest = {
   },
   islands: {
     "./islands/BlogForm.tsx": $BlogForm,
+    "./islands/ChatInterface.tsx": $ChatInterface,
     "./islands/ClientsCarousel.tsx": $ClientsCarousel,
     "./islands/Counter.tsx": $Counter,
+    "./islands/Editor.tsx": $Editor,
     "./islands/LoginForm.tsx": $LoginForm,
     "./islands/Navbar.tsx": $Navbar,
     "./islands/RegisterForm.tsx": $RegisterForm,
     "./islands/RichTextEditor.tsx": $RichTextEditor,
+    "./islands/ThemeProvider.tsx": $ThemeProvider,
   },
   baseUrl: import.meta.url,
 } satisfies Manifest;

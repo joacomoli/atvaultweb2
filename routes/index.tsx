@@ -38,7 +38,7 @@ export default function Home({ data }: PageProps<Data>) {
         <ClientsCarousel />
         <CTASection />
       </main>
-      <Footer />
+      <Footer user={user} />
     </>
   );
 }

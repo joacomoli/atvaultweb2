@@ -1,5 +1,5 @@
 import { Handlers } from "$fresh/server.ts";
-import { clearAuthCookie } from "../utils/auth.ts";
+import { clearAllCookies } from "../utils/auth.ts";
 
 export const handler: Handlers = {
   async POST(_req, _ctx) {
@@ -8,7 +8,7 @@ export const handler: Handlers = {
       headers: { Location: "/login" },
     });
     
-    clearAuthCookie(response);
+    clearAllCookies(response);
     return response;
   },
 }; 

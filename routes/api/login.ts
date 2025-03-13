@@ -1,7 +1,6 @@
 import { Handlers } from "$fresh/server.ts";
 import { connectDB } from "../../utils/db.ts";
-import { compare } from "bcrypt";
-import { authenticateUser } from "../../utils/auth.ts";
+import { authenticateUser, createAuthToken, setAuthCookie, setUserCookies } from "../../utils/auth.ts";
 
 export const handler: Handlers = {
   async POST(req) {
@@ -9,7 +8,7 @@ export const handler: Handlers = {
       const body = await req.json();
       const { email, password } = body;
 
-      // Usar authenticateUser en lugar de buscar directamente en la base de datos
+      // Autenticar usuario
       const user = await authenticateUser(email, password);
 
       if (!user) {
@@ -22,27 +21,30 @@ export const handler: Handlers = {
         );
       }
 
-      // Crear una cookie que expire en 7 días
-      const expires = new Date();
-      expires.setDate(expires.getDate() + 7);
-      const expiresStr = expires.toUTCString();
+      // Crear token JWT
+      const token = await createAuthToken(user._id.toString());
 
-      // Solo establecer la cookie de email
-      const cookie = `userEmail=${user.email}; Path=/; Expires=${expiresStr}`;
-
-      return new Response(
+      // Crear respuesta
+      const response = new Response(
         JSON.stringify({ 
           message: "Login exitoso",
-          user: { email: user.email }
+          user: { 
+            email: user.email,
+            name: user.name,
+            role: user.role
+          }
         }),
         {
           status: 200,
-          headers: { 
-            "Content-Type": "application/json",
-            "Set-Cookie": cookie
-          },
+          headers: { "Content-Type": "application/json" },
         }
       );
+
+      // Configurar cookies
+      setAuthCookie(response, token);
+      setUserCookies(response, user.name, user.role);
+
+      return response;
     } catch (error) {
       console.error("Error detallado en el login:", error);
       return new Response(
